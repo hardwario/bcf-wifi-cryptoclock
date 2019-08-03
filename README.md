@@ -1,6 +1,8 @@
 <a href="https://www.bigclown.com/"><img src="https://bigclown.sirv.com/logo.png" width="200" alt="BigClown Logo" align="right"></a>
 
-# Firmware Skeleton for BigClown WiFi Cryptoclock
+# Firmware for BigClown WiFi Cryptoclock
+
+Displays the current date, time and Bitcoin price in USD.
 
 Components:
 * [Battery Module](https://shop.bigclown.com/battery-module/)
