@@ -9,22 +9,25 @@
 #define CLOCK_12HOUR 1
 
 // LED instance
-bc_led_t led;
-// WiFi module instance
+bc_led_t led_lcd_green;
+// WiFi Module instance
 bc_esp8266_t esp8266;
-
+bc_scheduler_task_id_t refresh_data_task;
+int battery_percentage;
 char btc_price[10];
 
 void esp8266_event_handler(bc_esp8266_t *self, bc_esp8266_event_t event, void *event_param)
 {
     if (event == BC_ESP8266_EVENT_WIFI_CONNECT_SUCCESS)
     {
-        bc_led_pulse(&led, 500);
+        // Connect to remote server
+        bc_led_pulse(&led_lcd_green, 200);
 
         bc_esp8266_tcp_connect(&esp8266, HTTP_HOST, 80);
     }
     else if (event == BC_ESP8266_EVENT_SOCKET_CONNECT_SUCCESS)
     {
+        // Send HTTP request
         char data[100];
         sprintf(data,
             "GET %s HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n\r\n\r\n",
@@ -34,11 +37,13 @@ void esp8266_event_handler(bc_esp8266_t *self, bc_esp8266_event_t event, void *e
     }
     else if (event == BC_ESP8266_EVENT_DATA_RECEIVED)
     {
+        // Read response
         uint32_t length = bc_esp8266_get_received_message_length(&esp8266);
         char *buffer = malloc(length + 1);
         bc_esp8266_get_received_message_data(&esp8266, (uint8_t *) buffer, length + 1);
         buffer[length] = '\0';
 
+        // Skip HTTP header and copy data
         char *data = strstr(buffer, "\r\n\r\n");
         data += 4;
         length = strlen(data);
@@ -46,33 +51,60 @@ void esp8266_event_handler(bc_esp8266_t *self, bc_esp8266_event_t event, void *e
 
         free(buffer);
 
+        // Disconnect and turn off WiFi Module
         bc_esp8266_disconnect(&esp8266);
     }
 }
 
 static void refresh_data_event_handler(void *param)
 {
+    // Turn on WiFi Module and connect to WiFi
     bc_esp8266_connect(&esp8266);
 
     bc_scheduler_plan_current_relative(REFRESH_DATA_INTERVAL);
+}
+
+void battery_module_event_handler(bc_module_battery_event_t event, void *event_param)
+{
+    if (event == BC_MODULE_BATTERY_EVENT_UPDATE)
+    {
+        bc_module_battery_get_charge_level(&battery_percentage);
+    }
+}
+
+void button_event_handler(bc_button_t *self, bc_button_event_t event, void *event_param)
+{
+    if (event == BC_BUTTON_EVENT_PRESS)
+    {
+        bc_scheduler_plan_now(refresh_data_task);
+    }
 }
 
 void application_init()
 {
     btc_price[0] = '\0';
 
-    // Initialize LED
-    bc_led_init(&led, BC_GPIO_LED, false, false);
-
-    // Initialize WiFi module
+    // Initialize WiFi Module
     bc_esp8266_init(&esp8266, BC_UART_UART1);
     bc_esp8266_set_event_handler(&esp8266, esp8266_event_handler, NULL);
     bc_esp8266_set_station_mode(&esp8266, WIFI_SSID, WIFI_PASSWORD);
     bc_esp8266_set_sntp(&esp8266, TIMEZONE);
 
+    // Initialize LCD Module
     bc_module_lcd_init();
+    bc_led_init_virtual(&led_lcd_green, BC_MODULE_LCD_LED_GREEN, bc_module_lcd_get_led_driver(), true);
 
-    bc_scheduler_register(refresh_data_event_handler, NULL, 100);
+    // Initialize button on LCD/Core Module
+    static bc_button_t button;
+    bc_button_init(&button, BC_GPIO_BUTTON, BC_GPIO_PULL_DOWN, false);
+    bc_button_set_event_handler(&button, button_event_handler, NULL);
+
+    // Initialize Battery Module
+    bc_module_battery_init();
+    bc_module_battery_set_event_handler(battery_module_event_handler, NULL);
+    bc_module_battery_set_update_interval(REFRESH_DATA_INTERVAL);
+
+    refresh_data_task = bc_scheduler_register(refresh_data_event_handler, NULL, 100);
 }
 
 void application_task(void)
@@ -91,10 +123,17 @@ void application_task(void)
     bc_rtc_t datetime;
     bc_rtc_get_date_time(&datetime);
 
+    // Draw date and month
     snprintf(str, sizeof(str), "%d. %d.", datetime.date, datetime.month);
     bc_module_lcd_set_font(&bc_font_ubuntu_28);
     bc_module_lcd_draw_string(10, 10, str, true);
 
+    // Draw battery percentage
+    snprintf(str, sizeof(str), "%d%%", battery_percentage);
+    bc_module_lcd_set_font(&bc_font_ubuntu_15);
+    bc_module_lcd_draw_string(90, 11, str, true);
+
+    // Draw AM/PM
     uint8_t hours = datetime.hours;
     if (CLOCK_12HOUR)
     {
@@ -109,6 +148,7 @@ void application_task(void)
         bc_module_lcd_draw_string(95, 50, str, true);
     }
 
+    // Draw hours and minutes
     snprintf(str, sizeof(str), "%d:%02d", hours, datetime.minutes);
     bc_module_lcd_set_font(&bc_font_ubuntu_28);
     if (hours < 10)
@@ -120,6 +160,7 @@ void application_task(void)
         bc_module_lcd_draw_string(10, 50, str, true);
     }
 
+    // Draw BTC price
     snprintf(str, sizeof(str), "$%s", btc_price);
     bc_module_lcd_set_font(&bc_font_ubuntu_28);
     bc_module_lcd_draw_string(10, 90, str, true);
