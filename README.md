@@ -4,6 +4,8 @@
 
 Displays the current date, time and Bitcoin price in USD.
 
+![Photo of WiFi Cryptoclock](doc/wifi-cryptoclock.jpg)
+
 ## Components
 
 * [Battery Module](https://shop.bigclown.com/battery-module/)
