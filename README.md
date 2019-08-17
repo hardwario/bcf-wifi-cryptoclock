@@ -15,7 +15,44 @@ Displays the current date, time and Bitcoin price in USD.
 
 ## WiFi module
 
-Use ESP-12E or ESP-12F (optimized PCB antenna) and flash latest [ESP8266 NonOS AT firmware](https://www.espressif.com/en/support/download/at).
+Use ESP-12E or ESP-12F (optimized PCB antenna) with 4MB (32Mb) flash size.
+
+### ESP8266 firmware
+
+Flash latest [ESP8266 NonOS AT firmware](https://www.espressif.com/en/support/download/at).
+
+* Install [esptool](https://github.com/espressif/esptool)
+```
+sudo apt install esptool
+```
+* Connect WiFi module with USB to UART Bridge
+
+| WiFi module | USB to UART Bridge |
+| --- | --- |
+| P2 | TX |
+| P3 | RX |
+| P8 | 3V3 |
+| IO0 | GND |
+| VDD | 3V3 |
+| GND | GND |
+* Check right connection
+```
+esptool --port /dev/ttyUSB0 --baud 115200 chip_id
+```
+* Download and flash firmware
+```
+wget https://www.espressif.com/sites/default/files/ap/ESP8266_NonOS_AT_Bin_V1.7.1.zip
+unzip ESP8266_NonOS_AT_Bin_V1.7.1.zip
+cd ESP8266_NonOS_AT_Bin_V1.7.1
+esptool --port /dev/ttyUSB0 --baud 115200 --chip esp8266 write_flash --flash_size 2MB-c1 0x00000 bin/boot_v1.7.bin 0x01000 bin/at/1024+1024/user1.2048.new.5.bin 0x1fc000 bin/esp_init_data_default_v08.bin 0xfe000 bin/blank.bin 0x1fe000 bin/blank.bin
+```
+* Disconnect IO0 pin and check version via AT command
+```
+picocom -b 115200 --omap crcrlf /dev/ttyUSB0
+AT+GMR
+```
+
+### Other boards
 
 You can use other ESP8266 board like NodeMCU or Wemos D1 mini and connect it with wires:
 
