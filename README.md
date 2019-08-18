@@ -31,8 +31,8 @@ sudo apt install esptool
 | --- | --- |
 | P2 | TX |
 | P3 | RX |
-| P8 | 3V3 |
-| IO0 | GND |
+| P8 | 3V3 or RTS |
+| IO0 | GND or DTR |
 | VDD | 3V3 |
 | GND | GND |
 * Check right connection
