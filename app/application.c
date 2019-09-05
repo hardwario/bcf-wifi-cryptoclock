@@ -13,8 +13,9 @@ bc_led_t led_lcd_green;
 // WiFi Module instance
 bc_esp8266_t esp8266;
 bc_scheduler_task_id_t refresh_data_task;
-int battery_percentage;
-char btc_price[10];
+int battery_percentage = 0;
+int btc_price = 0;
+uint8_t last_minute = 60;
 
 void esp8266_event_handler(bc_esp8266_t *self, bc_esp8266_event_t event, void *event_param)
 {
@@ -46,8 +47,7 @@ void esp8266_event_handler(bc_esp8266_t *self, bc_esp8266_event_t event, void *e
         // Skip HTTP header and copy data
         char *data = strstr(buffer, "\r\n\r\n");
         data += 4;
-        length = strlen(data);
-        strncpy(btc_price, data, 9);
+        btc_price = atoi(data);
 
         free(buffer);
 
@@ -82,8 +82,6 @@ void button_event_handler(bc_button_t *self, bc_button_event_t event, void *even
 
 void application_init()
 {
-    btc_price[0] = '\0';
-
     // Initialize WiFi Module
     bc_esp8266_init(&esp8266, BC_UART_UART1);
     bc_esp8266_set_event_handler(&esp8266, esp8266_event_handler, NULL);
@@ -115,13 +113,20 @@ void application_task(void)
         return;
     }
 
+    bc_rtc_t datetime;
+    bc_rtc_get_date_time(&datetime);
+    if (datetime.minutes == last_minute)
+    {
+        bc_scheduler_plan_current_relative(1000);
+        return;
+    }
+    last_minute = datetime.minutes;
+
     bc_system_pll_enable();
 
     bc_module_lcd_clear();
 
     char str[32];
-    bc_rtc_t datetime;
-    bc_rtc_get_date_time(&datetime);
 
     // Draw date and month
     snprintf(str, sizeof(str), "%d. %d.", datetime.date, datetime.month);
@@ -161,7 +166,7 @@ void application_task(void)
     }
 
     // Draw BTC price
-    snprintf(str, sizeof(str), "$%s", btc_price);
+    snprintf(str, sizeof(str), "$%d", btc_price);
     bc_module_lcd_set_font(&bc_font_ubuntu_28);
     bc_module_lcd_draw_string(10, 90, str, true);
 
