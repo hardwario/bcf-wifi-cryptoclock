@@ -10,12 +10,31 @@ Displays the current date, time and Bitcoin price in USD.
 
 * [Battery Module](https://shop.bigclown.com/battery-module/)
 * [Core Module - NR](https://shop.bigclown.com/core-module-nr/)
-* [WiFi module by chiptron.cz](https://chiptron.cz/articles.php?article_id=182)
+* [WiFi module by chiptron.cz](https://www.tindie.com/products/chiptron/wi-fi-module-with-esp8266-for-bigclown-bare-pcb/)
 * [LCD Module](https://shop.bigclown.com/lcd-module-bg/)
 
 ## WiFi module
 
 Use ESP-12E or ESP-12F (optimized PCB antenna) with 4MB (32Mb) flash size.
+
+### BOM
+
+* 1x ESP8266 ESP-12F
+* 1x R0805 1k0 (R1)
+* 3x R0805 10k (R3, R4, R5)
+* 1x CKS0805 100n X7R (C1)
+* 1x CKS1812 4,7u X7R (C2)
+* 1x CTS 330u D (C3)
+
+### Solder notes
+
+* R6, R7 - DNP (Do Not Populate)
+* Solder jumpers
+  * RESET with P6
+  * CH_PD with P8
+  * IO0 with P9 (JP2)
+  * UART_RX - TX to RX0 or RX1
+  * UART_TX - RX to TX0 or TX1
 
 ### ESP8266 firmware
 
