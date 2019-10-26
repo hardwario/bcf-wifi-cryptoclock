@@ -48,10 +48,10 @@ sudo apt install esptool
 
 | WiFi module | USB to UART Bridge |
 | --- | --- |
-| P2 | TX |
-| P3 | RX |
+| P0 (TX0) or P2 (TX1) | TX |
+| P1 (RX0) or P3 (RX1) | RX |
 | P8 | 3V3 or RTS |
-| IO0 | GND or DTR |
+| P9 | GND or DTR |
 | VDD | 3V3 |
 | GND | GND |
 * Check right connection
@@ -65,10 +65,12 @@ unzip ESP8266_NonOS_AT_Bin_V1.7.1.zip
 cd ESP8266_NonOS_AT_Bin_V1.7.1
 esptool --port /dev/ttyUSB0 --baud 115200 --chip esp8266 write_flash --flash_size 2MB-c1 0x00000 bin/boot_v1.7.bin 0x01000 bin/at/1024+1024/user1.2048.new.5.bin 0x1fc000 bin/esp_init_data_default_v08.bin 0xfe000 bin/blank.bin 0x1fe000 bin/blank.bin
 ```
-* Disconnect IO0 pin and check version via AT command
+* Disconnect P9 pin and check version via AT command
 ```
 picocom -b 115200 --omap crcrlf /dev/ttyUSB0
+Ctrl+a Ctrl+g (set RTS to low)
 AT+GMR
+Ctrl+a Ctrl+x (exit)
 ```
 
 ### Other boards
