@@ -1,6 +1,6 @@
-<a href="https://www.bigclown.com/"><img src="https://bigclown.sirv.com/logo.png" width="200" alt="BigClown Logo" align="right"></a>
+<a href="https://www.hardwario.com/"><img src="https://www.hardwario.com/ci/assets/hw-logo.svg" width="200" alt="HARDWARIO Logo" align="right"></a>
 
-# Firmware for BigClown WiFi Cryptoclock
+# Firmware for HARDWARIO WiFi Cryptoclock
 
 Displays the current date, time and Bitcoin price in USD.
 
@@ -77,7 +77,7 @@ Ctrl+a Ctrl+x (exit)
 
 You can use other ESP8266 board like NodeMCU or Wemos D1 mini and connect it with wires:
 
-| ESP8266 board | BigClown Core Module |
+| ESP8266 board | HARDWARIO Core Module |
 | --- | --- |
 | RX | P2 |
 | TX | P3 |
